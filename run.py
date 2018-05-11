@@ -2,6 +2,7 @@
 import urllib.request
 import os
 import sys
+import ParseHTML
 
 class Whois:
     # SI register parameters which can be read from whois
@@ -71,6 +72,9 @@ class Whois:
     com_Registrar_Abuse_Contact_Email = None
     com_Registrar_Abuse_Contact_Phone = None
 
+    #search content
+    raw_whois_data = None
+
     def check_domain(self, domain):
         if len(domain)<2: return False
         try:
@@ -85,6 +89,9 @@ class Whois:
                 if tld=="net": return True
                 if tld=="org": return True
                 if tld=="biz": return True
+                if tld=="de": return True
+                if tld=="eu": return True
+                if tld=="pl": return True
                 else: return False
         except Exception as e:
             print(str(e))
@@ -94,7 +101,7 @@ class Whois:
         print(self.check_domain(domain))
         #search for whois data and send respod resp = urllib.request.urlopen(req)
         if self.check_domain(domain): #če je domena prave oblike
-            print("ok")
+            
             try:
                 url = 'https://www.whois.com/whois/'+domain
                 # now, with the below headers, we defined ourselves as a simpleton who is
@@ -108,13 +115,11 @@ class Whois:
 
                 name = domain.split(".")[0]
                 tld = domain.split(".")[1]
+                #print(self.parse_data_tld(respData))
                 
-                if tld=="si": self.parse_si_tld(prvi_string)
-                if tld=="com": self.parse_com_tld(prvi_string)
-                if tld=="net": self.parse_com_tld(prvi_string)
-                if tld=="org": self.parse_com_tld(prvi_string)
-                if tld=="biz": self.parse_com_tld(prvi_string)
-
+                self.raw_whois_data = self.parse_data_tld(respData)
+                print(self.__str__())
+                
                 #saveFile = open('HTML_content_'+domain+'.txt','w')
                 #return prvi_string
                 #saveFile.close()
@@ -124,38 +129,27 @@ class Whois:
                 
         else: return "null" #če domena ni prave oblike
 
-    def parse_si_tld(self, content):
-        # SI Register domains only
-        _found = 0 
-        for item in content:
-            if '% This is ARNES whois database' in item: #find start
-                _found = 1
-            if '% Full domain details are available here https://www.registry.si' in item: #find end
-                 _found = 0
-            if _found == 1: #just print lines
-                print(item)
-        print('.si domains -> done')
+    def parse_data_tld(self, content):
+        # data in
+        try:
+            parser = ParseHTML.ParseHTML()
+            html = content
+            parser.feed(str(html))
+            return parser.data
+        except Exception as e:
+            print(str(e))
+
+    def __str__(self):
+        string = ""
+        for line in self.raw_whois_data:
+            line_split = line.split('\\n')
+            for item in line_split:
+                string+=item+'\n'
+        return string
         
 
-    def parse_com_tld(self, content):
-        # com, net, biz, org, 
-        #<div class="df-heading">Raw Whois Data</div> -> start
-        #<h2 class="whois_heading">related domain names</h2> -> end
-        _found = 0 
-        for item in content:
-            if 'Raw Whois Data' in item: #find start
-                _found = 1
-                #print(item)
-            if 'related domain names' in item: #find end
-                 _found = 0
-                 #print(item)
-            if _found == 1: #just print lines
-                print(item)
-                
-        print('.com .net .org .biz domains -> done')
         
 
-if __name__ == "__main__":
-    req=Whois()
-    req.search('najdi.si')
-
+#if __name__ == "__main__":
+#    Whois().search('domain.tld')
+#    
