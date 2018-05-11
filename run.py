@@ -92,6 +92,8 @@ class Whois:
                 if tld=="de": return True
                 if tld=="eu": return True
                 if tld=="pl": return True
+                if tld=="hr": return True
+                if tld=="rs": return True
                 else: return False
         except Exception as e:
             print(str(e))
@@ -151,5 +153,5 @@ class Whois:
         
 
 #if __name__ == "__main__":
-#    Whois().search('domain.tld')
-#    
+#    req=Whois()
+#    req.search('najdi.si')
